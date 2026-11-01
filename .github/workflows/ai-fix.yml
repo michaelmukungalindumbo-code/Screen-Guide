@@ -35,9 +35,16 @@ jobs:
         with: {distribution: temurin, java-version: 17}
       - uses: gradle/actions/setup-gradle@v4
         with: {gradle-version: "8.13"}
+      # A key copied on a phone often brings hidden spaces or line breaks with it. Remove them; the key is never printed.
+      - id: key
+        env: {KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+        run: |
+          k=$(printf '%s' "$KEY" | tr -d '[:space:]')
+          echo "::add-mask::$k"
+          echo "value=$k" >> "$GITHUB_OUTPUT"
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ steps.key.outputs.value }}
           # The workflow's own short-lived token, so no extra GitHub app has to be installed.
           # (Its pushes do not start the APK build; the build runs when you merge the pull request.)
           github_token: ${{ secrets.GITHUB_TOKEN }}
