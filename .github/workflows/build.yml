@@ -15,9 +15,10 @@ jobs:
           echo "Using $Z"
           unzip -q "$Z" -d src
       # The word rules (which task, which app) are tested with real questions first: a wrong match fails the build.
-      - run: cd src && gradle testDebugUnitTest assembleDebug --no-daemon
+      # Then Android's bug finder (lint): something that would crash some phones fails the build too.
+      - run: cd src && gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
       - if: failure()
         uses: actions/upload-artifact@v4
-        with: {name: test-report, path: src/app/build/reports/tests/}
+        with: {name: test-and-lint-reports, path: "src/app/build/reports/"}
       - uses: actions/upload-artifact@v4
         with: {name: ScreenGuide-apk, path: src/app/build/outputs/apk/debug/app-debug.apk}
