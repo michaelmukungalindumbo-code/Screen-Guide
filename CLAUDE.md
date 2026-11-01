@@ -32,6 +32,15 @@ them in plain English for a non-specialist.
 9. Commit **only** the new zip, with a message like `App v0.56: fix crash when a guide has no next step`.
    Never commit `src/`.
 
+## When the cause is in the server
+
+Guide problems from the watcher (issues titled "Guide problem: …") are usually in the server: which button to point at
+and what to say are decided there. In your run the server is in `server/`: follow `server/CLAUDE.md` there. Fix the cause
+where it really is. Never commit anything in `server/` or `media/` yourself; the run sends server changes as a pull request.
+
+If `media/` has pictures (`video1/frame001.png` …, one per second, or `picture1.png`), the owner attached a screen
+recording: look at them in order before reading code.
+
 ## Rules
 
 - Never delete, skip or weaken a test to make it pass.

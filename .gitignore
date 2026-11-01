@@ -1,2 +1,5 @@
 # The unzipped source while building or fixing. Only the versioned zips are kept in the repository.
 src/
+# The server checkout and the recording pictures in an AI fixer run: never part of the app.
+server/
+media/
