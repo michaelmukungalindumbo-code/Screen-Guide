@@ -38,6 +38,9 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # The workflow's own short-lived token, so no extra GitHub app has to be installed.
+          # (Its pushes do not start the APK build; the build runs when you merge the pull request.)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           label_trigger: "ai-fix"
           branch_prefix: "ai-fix/"
           claude_args: |
