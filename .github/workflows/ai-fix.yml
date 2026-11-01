@@ -86,7 +86,7 @@ jobs:
           claude_args: |
             --model claude-sonnet-5-5
             --max-turns 50
-            --allowedTools "Bash(unzip:*),Bash(zip:*),Bash(gradle:*),Bash(cd:*),Bash(ls:*),Bash(cp:*),Bash(mkdir:*),Bash(rm:*),Bash(cat:*),Bash(grep:*),Bash(git status:*),Bash(git diff:*),Bash(bash tests/run.sh),Bash(python3:*),Bash(ffmpeg:*)"
+            --allowedTools "Bash(unzip:*),Bash(zip:*),Bash(gradle:*),Bash(cd:*),Bash(ls:*),Bash(cp:*),Bash(mkdir:*),Bash(rm:*),Bash(cat:*),Bash(grep:*),Bash(git status:*),Bash(git diff:*),Bash(bash tests/run.sh:*),Bash(python3:*),Bash(ffmpeg:*)"
             --append-system-prompt "The server's code is in server/ (a separate repository): read server/CLAUDE.md before working there. Find where the cause really is: the app (follow CLAUDE.md) or the server (follow server/CLAUDE.md). Never commit anything under server/ or media/ yourself; a later step sends server changes as a pull request. If media/ has video*/frame*.png or picture*.png, the owner attached a screen recording or picture: look at the frames in order (one per second) with the Read tool to see what went wrong before you look at code."
       # Server changes become a pull request on Screen-Guide-Server, and the link goes on the issue
       - name: Send a server fix as a pull request
