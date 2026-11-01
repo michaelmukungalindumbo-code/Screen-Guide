@@ -1,0 +1,46 @@
+name: AI fixer
+# A crash report from a phone (or you) opens an issue labelled "ai-fix". The AI then:
+#   reproduces the crash with a failing test, makes the smallest fix, runs the tests and Android's bug finder,
+#   saves the fix as the next source zip on its own branch, and explains it on the issue in plain English.
+# Nothing reaches phones until you tap "Create pull request" on its comment and merge it.
+# To talk to it afterwards (answer its question, ask for a change), write @claude in a comment on the issue.
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: ai-fix-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    if: |
+      (github.event_name == 'issues' && github.event.label.name == 'ai-fix') ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30          # a hard stop, so a stuck run cannot use up AI money
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 1}
+      # The same tools the APK build uses, so the AI can run the tests and the bug finder before it says "fixed"
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 17}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: "8.13"}
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          label_trigger: "ai-fix"
+          branch_prefix: "ai-fix/"
+          claude_args: |
+            --model claude-sonnet-5-5
+            --max-turns 40
+            --allowedTools "Bash(unzip:*),Bash(zip:*),Bash(gradle:*),Bash(cd:*),Bash(ls:*),Bash(cp:*),Bash(mkdir:*),Bash(rm:*),Bash(cat:*),Bash(grep:*),Bash(git status:*),Bash(git diff:*)"
