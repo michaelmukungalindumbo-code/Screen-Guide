@@ -4,14 +4,16 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - env: {KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
+      - id: key
+        env: {KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
         run: |
-          echo "Key length: ${#KEY}"
-          echo "Starts with sk-ant-: $([[ "$KEY" == sk-ant-* ]] && echo yes || echo no)"
-          echo "Has spaces or line breaks: $([[ "$KEY" =~ [[:space:]] ]] && echo yes || echo no)"
-          for m in claude-sonnet-5-5 claude-haiku-5-5; do
-            code=$(curl -s -o r.json -w '%{http_code}' https://api.anthropic.com/v1/messages -H "x-api-key: $KEY" \
-              -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
-              -d "{\"model\":\"$m\",\"max_tokens\":5,\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}]}")
-            echo "$m -> HTTP $code: $(jq -r 'if .error then .error.type + ": " + .error.message else "works" end' r.json)"
-          done
+          k=$(printf '%s' "$KEY" | tr -d '[:space:]')
+          echo "::add-mask::$k"
+          echo "value=$k" >> "$GITHUB_OUTPUT"
+      - env: {KEY: "${{ steps.key.outputs.value }}"}
+        run: |
+          echo "Cleaned key length: ${#KEY}"
+          code=$(curl -s -o r.json -w '%{http_code}' https://api.anthropic.com/v1/messages -H "x-api-key: $KEY" \
+            -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
+            -d '{"model":"claude-sonnet-5-5","max_tokens":5,"messages":[{"role":"user","content":"Hi"}]}')
+          echo "claude-sonnet-5-5 -> HTTP $code: $(jq -r 'if .error then .error.type + ": " + .error.message else "works" end' r.json)"
