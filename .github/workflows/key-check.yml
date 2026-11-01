@@ -4,13 +4,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - env: {T: "${{ secrets.SERVER_TOKEN }}"}
+      - env: {GH_TOKEN: "${{ github.token }}", U: "https://screen-guide-server.onrender.com"}
         run: |
-          T=$(printf '%s' "$T" | tr -d '[:space:]')
-          R=michaelmukungalindumbo-code/Screen-Guide-Server
-          api() { curl -s -o r.json -w '%{http_code}' -H "Authorization: Bearer $T" -H "Accept: application/vnd.github+json" "$@"; }
-          echo "Read server repo: HTTP $(api https://api.github.com/repos/$R)"
-          sha=$(curl -s -H "Authorization: Bearer $T" https://api.github.com/repos/$R/git/ref/heads/main | jq -r .object.sha)
-          echo "Create a test branch: HTTP $(api -X POST https://api.github.com/repos/$R/git/refs -d "{\"ref\":\"refs/heads/token-check\",\"sha\":\"$sha\"}")"
-          echo "Delete the test branch: HTTP $(api -X DELETE https://api.github.com/repos/$R/git/refs/heads/token-check)"
-          echo "List pull requests: HTTP $(api "https://api.github.com/repos/$R/pulls?per_page=1")"
+          curl -s --max-time 90 "$U/version" > v.json; echo "Server version: $(cat v.json)"
+          echo "With the fixer's token: HTTP $(curl -s -o r.json -w '%{http_code}' --max-time 60 -H "Authorization: Bearer $GH_TOKEN" "$U/watch/shots/0123456789abcdef") $(cat r.json)"
+          echo "With no token: HTTP $(curl -s -o r.json -w '%{http_code}' --max-time 60 "$U/watch/shots/0123456789abcdef") $(cat r.json)"
+          echo "With a made-up token: HTTP $(curl -s -o r.json -w '%{http_code}' --max-time 60 -H "Authorization: Bearer ghs_madeup123" "$U/watch/shots/0123456789abcdef") $(cat r.json)"
