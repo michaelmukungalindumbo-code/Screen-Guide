@@ -38,8 +38,12 @@ Guide problems from the watcher (issues titled "Guide problem: …") are usually
 and what to say are decided there. In your run the server is in `server/`: follow `server/CLAUDE.md` there. Fix the cause
 where it really is. Never commit anything in `server/` or `media/` yourself; the run sends server changes as a pull request.
 
-If `media/` has pictures (`video1/frame001.png` …, one per second, or `picture1.png`), the owner attached a screen
-recording: look at them in order before reading code.
+If `media/` has `step01.jpg`, `step02.jpg` …, those are pictures of the screen at each step of the guide, showing what the
+person saw (ScreenGuide's ring and card included). Step 3 in the issue is `media/step03.jpg`. Look at them before reading
+code: they show what the words alone cannot (a black picture, a button with no words, where the ring really was).
+If `media/` has `video1/frame001.png` … or `picture1.png`, the owner attached a screen recording or picture: look at them
+in order. The pictures show the owner's real phone: never write names, messages, numbers or anything personal you see in
+them into issue comments, tests or commits.
 
 ## Rules
 

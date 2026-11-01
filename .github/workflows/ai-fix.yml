@@ -68,6 +68,28 @@ jobs:
             rm -f "media/in$n"
           done < media/urls.txt
           ls -R media | head -50
+      # The watcher's step pictures: kept privately on the server, only this repository's runs may download them.
+      # They go to media/step01.jpg, step02.jpg ... (never printed, never committed, never put on GitHub).
+      - name: Step pictures from the watcher
+        env: {GH_TOKEN: "${{ github.token }}", SERVER_URL: "https://screen-guide-server.onrender.com"}
+        run: |
+          sid=$(python3 -c "import json,os,re; ev=json.load(open(os.environ['GITHUB_EVENT_PATH'])); m=re.search(r'<!-- shots: ([0-9a-f]{16}) -->', (ev.get('issue') or {}).get('body') or ''); print(m.group(1) if m else '')")
+          [ -n "$sid" ] || { echo "No step pictures for this issue."; exit 0; }
+          for i in 1 2 3; do   # the free server may be asleep: it can take a minute to wake
+            code=$(curl -s -o media/shots.json -w '%{http_code}' --max-time 90 -H "Authorization: Bearer $GH_TOKEN" "$SERVER_URL/watch/shots/$sid")
+            [ "$code" = 200 ] && break; echo "Server said $code"; sleep 10
+          done
+          python3 - <<'PY'
+          import base64, json, os
+          try:
+              shots = json.load(open("media/shots.json")).get("shots", [])
+          except Exception:
+              shots = []
+          for s in shots:
+              open("media/step%02d.jpg" % int(s["n"]), "wb").write(base64.b64decode(s["jpg"]))
+          print("Step pictures:", len(shots))
+          PY
+          rm -f media/shots.json
       # A key copied on a phone often brings hidden spaces or line breaks with it. Remove them; the key is never printed.
       - id: key
         env: {KEY: "${{ secrets.ANTHROPIC_API_KEY }}"}
@@ -87,7 +109,7 @@ jobs:
             --model claude-sonnet-5-5
             --max-turns 50
             --allowedTools "Bash(unzip:*),Bash(zip:*),Bash(gradle:*),Bash(cd:*),Bash(ls:*),Bash(cp:*),Bash(mkdir:*),Bash(rm:*),Bash(cat:*),Bash(grep:*),Bash(git status:*),Bash(git diff:*),Bash(bash tests/run.sh:*),Bash(python3:*),Bash(ffmpeg:*)"
-            --append-system-prompt "The server's code is in server/ (a separate repository): read server/CLAUDE.md before working there. Find where the cause really is: the app (follow CLAUDE.md) or the server (follow server/CLAUDE.md). Never commit anything under server/ or media/ yourself; a later step sends server changes as a pull request. If media/ has video*/frame*.png or picture*.png, the owner attached a screen recording or picture: look at the frames in order (one per second) with the Read tool to see what went wrong before you look at code."
+            --append-system-prompt "The server's code is in server/ (a separate repository): read server/CLAUDE.md before working there. Find where the cause really is: the app (follow CLAUDE.md) or the server (follow server/CLAUDE.md). Never commit anything under server/ or media/ yourself; a later step sends server changes as a pull request. If media/ has stepNN.jpg, those are pictures of the screen at each step of the guide (step 3 = media/step03.jpg), with ScreenGuide's ring and card: look at them with the Read tool before you look at code. If media/ has video*/frame*.png or picture*.png, the owner attached a screen recording or picture: look at the frames in order. The pictures show the owner's real phone: never write names, messages, numbers or anything personal you see in them into comments, tests or commits."
       # Server changes become a pull request on Screen-Guide-Server, and the link goes on the issue
       - name: Send a server fix as a pull request
         if: always()
