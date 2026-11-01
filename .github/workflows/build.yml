@@ -14,6 +14,10 @@ jobs:
           Z=$(git log -1 --diff-filter=AM --name-only --pretty=format: -- '*.zip' | head -1)
           echo "Using $Z"
           unzip -q "$Z" -d src
-      - run: cd src && gradle assembleDebug --no-daemon
+      # The word rules (which task, which app) are tested with real questions first: a wrong match fails the build.
+      - run: cd src && gradle testDebugUnitTest assembleDebug --no-daemon
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: {name: test-report, path: src/app/build/reports/tests/}
       - uses: actions/upload-artifact@v4
         with: {name: ScreenGuide-apk, path: src/app/build/outputs/apk/debug/app-debug.apk}
