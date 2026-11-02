@@ -1,5 +1,6 @@
 name: Screens on a small phone
-# ScreenGuide's own screens, opened in an emulator the size of a small phone (720 x 1600), with normal and big text.
+# ScreenGuide's own screens, opened in an emulator with a small screen (640 x 1280: smaller than most phones, so stricter),
+# with normal and big text.
 # Fails if a button people need is off the screen (2 Nov: the pop-up's Allow button was). Pictures: the "screens" download.
 on:
   pull_request:
@@ -34,8 +35,6 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: |
-            adb shell wm size 720x1600
-            adb shell wm density 320
             cd src && gradle connectedDebugAndroidTest --no-daemon; s=$?; adb pull /data/local/tmp/screens ../screens || true; exit $s
       - if: always()
         uses: actions/upload-artifact@v4
