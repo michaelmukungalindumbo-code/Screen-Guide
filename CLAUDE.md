@@ -38,8 +38,24 @@ Guide problems from the watcher (issues titled "Guide problem: …") are usually
 and what to say are decided there. In your run the server is in `server/`: follow `server/CLAUDE.md` there. Fix the cause
 where it really is. Never commit anything in `server/` or `media/` yourself; the run sends server changes as a pull request.
 
-If `media/` has pictures (`video1/frame001.png` …, one per second, or `picture1.png`), the owner attached a screen
-recording: look at them in order before reading code.
+If `media/` has `step01.jpg`, `step02.jpg` …, those are pictures of the screen at each step of the guide, showing what the
+person saw (ScreenGuide's ring and card included). Step 3 in the issue is `media/step03.jpg`. Look at them before reading
+code: they show what the words alone cannot (a black picture, a button with no words, where the ring really was).
+If `media/` has `video1/frame001.png` … or `picture1.png`, the owner attached a screen recording or picture: look at them
+in order. The pictures show the owner's real phone: never write names, messages, numbers or anything personal you see in
+them into issue comments, tests or commits.
+
+## Change requests and ideas
+
+Issues titled "Change request: …" or "Idea: …" are not bugs: the developer asked, while testing, for something to be
+added, removed or changed. `media/step101.jpg` (and up) is the screen when they asked, with a red circle where they
+pointed. For these issues, changing what the app does is allowed.
+- Find the screen in the code by its words (the words on screen appear in the source, in the app or in `server/`).
+- Small and clear (wording, a size, a colour, one button, one rule): make it, with a test where the logic can be tested,
+  then follow the usual steps (tests and bug finder pass, next version, new zip; or a server pull request).
+- Big (more than one screen, a new feature, or a change to what ScreenGuide does for its users) or unclear: reply on the
+  issue with a short plan in plain English (what you would change, on which screens) and stop. The owner answers with
+  @claude, and then you build it.
 
 ## Rules
 
