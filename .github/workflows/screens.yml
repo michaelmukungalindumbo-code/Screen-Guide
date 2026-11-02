@@ -1,0 +1,45 @@
+name: Screens on a small phone
+# ScreenGuide's own screens, opened in an emulator the size of a small phone (720 x 1600), with normal and big text.
+# Fails if a button people need is off the screen (2 Nov: the pop-up's Allow button was). Pictures: the "screens" download.
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 17}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: "8.13"}
+      - name: Newest source
+        run: |
+          Z=$(ls screenguide-src-v0.*.zip | sort -V | tail -1)
+          echo "Using $Z"
+          unzip -q "$Z" -d src
+      - run: cd src && gradle assembleDebug assembleDebugAndroidTest --no-daemon
+      - name: Let the emulator use the processor's speed-up
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: |
+            adb shell wm size 720x1600
+            adb shell wm density 320
+            cd src && gradle connectedDebugAndroidTest --no-daemon; s=$?; adb pull /data/local/tmp/screens ../screens || true; exit $s
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: screens, path: screens/}
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: {name: screens-report, path: src/app/build/reports/androidTests/}
