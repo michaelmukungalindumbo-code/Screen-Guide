@@ -40,6 +40,10 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with: {name: screens, path: screens/}
+      # The same pictures as text in the log, so they can be looked at where downloads are blocked (an AI reviewing the run)
+      - if: always()
+        name: Pictures in the log
+        run: for f in screens/*.png; do echo "SHOT $(basename "$f") $(base64 -w0 "$f")"; done
       - if: failure()
         uses: actions/upload-artifact@v4
         with: {name: screens-report, path: src/app/build/reports/androidTests/}
