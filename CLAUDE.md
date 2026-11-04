@@ -32,6 +32,17 @@ them in plain English for a non-specialist.
 9. Commit **only** the new zip, with a message like `App v0.56: fix crash when a guide has no next step`.
    Never commit `src/`.
 
+## When you cannot reproduce a problem (learned 4 Nov)
+
+- Do not stop at "probably the phone", "probably Android" or "a damaged install". Check our own side first. #26 ("class
+  not found" when tapping Sign in) was our app: a library part was not packed into it. For a class that cannot be found,
+  check it is really inside the app: `SignInLibrariesTest` (in `app/src/androidTest/`) shows how, and the "Screens on a
+  small phone" check runs such tests on an emulator for every pull request.
+- If a plain unit test cannot show the cause, write a phone check (androidTest), or add a measurement so the next report
+  proves the cause (crash reports now keep every cause; slow answers say where the time went). Include it in your change.
+- If you still stop without a fix, start your comment with the line `**Needs a deeper look**`, so the owner's next
+  session with Claude picks it up.
+
 ## When the cause is in the server
 
 Guide problems from the watcher (issues titled "Guide problem: …") are usually in the server: which button to point at
