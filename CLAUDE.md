@@ -51,6 +51,12 @@ Issues titled "Change request: …" or "Idea: …" are not bugs: the developer a
 added, removed or changed. `media/step101.jpg` (and up) is the screen when they asked, with a red circle where they
 pointed. For these issues, changing what the app does is allowed.
 - Find the screen in the code by its words (the words on screen appear in the source, in the app or in `server/`).
+  **Unzip the newest source first** (step 1 above) and search `src/`: words inside a zip are not found by a search, and
+  saying "these words are not in our code" without unzipping is wrong (it happened on #18).
+- "Testing ScreenGuide" on a screen means the app under test is ScreenGuide itself. Its own screens are in
+  `src/app/src/main/java/zm/screenguide/` (for example `MainActivity.kt` holds "What do you need help with?",
+  "New chat" and "Never type your PIN or passwords here").
+- A test with no goal is watching only: ScreenGuide gives no instructions then, and that is not a problem.
 - Small and clear (wording, a size, a colour, one button, one rule): make it, with a test where the logic can be tested,
   then follow the usual steps (tests and bug finder pass, next version, new zip; or a server pull request).
 - Big (more than one screen, a new feature, or a change to what ScreenGuide does for its users) or unclear: reply on the
