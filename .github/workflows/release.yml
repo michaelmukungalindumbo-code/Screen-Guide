@@ -1,0 +1,38 @@
+name: Release APK
+# After "Build APK" passes on main, its APK becomes a public release (v0.102, v0.103 ...). ScreenGuide's own updater
+# (Updater.kt, v0.102) looks there, so an update keeps ScreenGuide switched on instead of the "restricted settings" lock
+# that a downloaded file brings. Nothing is built here: it is the same file "Build APK" made and tested.
+on:
+  workflow_run:
+    workflows: ["Build APK"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: ScreenGuide-apk
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: apk
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          Z=$(git log -1 --diff-filter=AM --name-only --pretty=format: -- '*.zip' | head -1)
+          V=$(unzip -p "$Z" app/build.gradle.kts | sed -n 's/.*versionName = "\(.*\)".*/\1/p' | head -1)
+          [ -n "$V" ] || { echo "No version found in $Z"; exit 1; }
+          if gh release view "v$V" >/dev/null 2>&1; then echo "v$V is already released"; exit 0; fi
+          cp apk/app-debug.apk "ScreenGuide-$V.apk"
+          gh release create "v$V" "ScreenGuide-$V.apk" --target "$SHA" --title "ScreenGuide $V" \
+            --notes "ScreenGuide $V (test build). ScreenGuide 0.102 and newer update themselves from here: menu, About ScreenGuide, Check for updates."
