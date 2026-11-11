@@ -1,0 +1,41 @@
+name: Play bundle
+# The file Google Play wants (.aab), made from the newest source: no self-updater (Play updates apps), not a test build.
+# Run by hand: Actions, "Play bundle", Run workflow. It is signed with the owner's upload key, which lives only in this
+# repository's GitHub Secrets (PLAY_KEYSTORE_BASE64, PLAY_KEYSTORE_PASSWORD, PLAY_KEY_ALIAS, PLAY_KEY_PASSWORD) and is
+# on the build machine only while this runs. Without those secrets it still builds, to prove the Play version compiles,
+# but that file is signed with the test key and named so: Google Play would refuse it.
+on: [workflow_dispatch]
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 17}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: "8.13"}
+      - env:
+          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+        run: |
+          Z=$(ls screenguide-src-v0.*.zip | sort -V | tail -1)
+          echo "Using $Z"
+          unzip -q "$Z" -d src
+          NAME=NOT-FOR-PLAY-test-key
+          if [ -n "$PLAY_KEYSTORE_BASE64" ]; then
+            echo "$PLAY_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/play.jks"
+            export PLAY_KEYSTORE_FILE="$RUNNER_TEMP/play.jks"
+            NAME=ScreenGuide-play
+          else
+            echo "::warning::No upload key in GitHub Secrets: this bundle is signed with the test key and is not for Google Play."
+          fi
+          cd src && gradle bundlePlay --no-daemon
+          rm -f "$RUNNER_TEMP/play.jks"
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: src/app/build/outputs/bundle/play/app-play.aab
