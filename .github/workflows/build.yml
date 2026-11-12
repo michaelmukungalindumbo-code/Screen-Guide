@@ -16,7 +16,11 @@ jobs:
           unzip -q "$Z" -d src
       # The word rules (which task, which app) are tested with real questions first: a wrong match fails the build.
       # Then Android's bug finder (lint): something that would crash some phones fails the build too.
+      # A "(tests first)" commit is the new tests sent before their fix, to prove they catch the problem: it is meant to
+      # fail. It no longer marks the run as failed (GitHub emailed the owner "Run failed" each time); the log still shows
+      # which tests failed.
       - run: cd src && gradle testDebugUnitTest lintDebug assembleDebug --no-daemon
+        continue-on-error: ${{ contains(github.event.head_commit.message, '(tests first)') }}
       - if: failure()
         uses: actions/upload-artifact@v4
         with: {name: test-and-lint-reports, path: "src/app/build/reports/"}
